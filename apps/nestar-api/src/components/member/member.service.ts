@@ -11,8 +11,8 @@ import { Message } from '../../libs/enums/common.enum';
 export class MemberService {
 	constructor(@InjectModel('Member') private readonly memberModel: Model<Member>) {}
 	public async signup(input: MemberInput): Promise<Member> {
-		// TODO Hash password
 		try {
+			// TODO Hash password
 			const result = await this.memberModel.create(input);
 			// TODO AUthentication via Token
 			return result;
