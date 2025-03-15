@@ -19,16 +19,15 @@ import { T } from './libs/types/common';
 			formatError: (error: T) => {
 				const graphQLFormattedError = {
 					code: error?.extensions.code,
-					message:
-						error?.extensions?.exception?.response?.message || error?.extensions?.response?.message || error?.message,
+					message:error?.extensions?.exception?.response?.message || error?.extensions?.response?.message || error?.message,
 				};
 				console.log('GRAPHQL GLOBAL ERR:', graphQLFormattedError);
 
 				return graphQLFormattedError;
 			},
 		}),
-		ComponentsModule,
-		DatabaseModule,
+		ComponentsModule, // HTTP 
+		DatabaseModule,//TCP
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],
