@@ -1,4 +1,3 @@
-
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
@@ -243,6 +242,14 @@ export class PropertyService {
 		if (soldAt || deletedAt) {
 			await this.memberService.memberStatsEditor({ _id: result.memberId, targetKey: 'memberProperties', modifier: -1 });
 		}
+
+		return result;
+	}
+
+	public async removePropertybyAdmin(propertyId: ObjectId): Promise<Property> {
+		const search: T = { _id: propertyId, propertyStatus: PropertyStatus.DELETE };
+		const result = await this.propertyModel.findOneAndDelete(search).exec();
+		if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
 
 		return result;
 	}
