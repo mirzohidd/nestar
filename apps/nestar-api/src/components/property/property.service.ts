@@ -226,7 +226,7 @@ export class PropertyService {
 		return result[0];
 	}
 
-	public async updatePropertybyAdmin(input: PropertyUpdate): Promise<Property> {
+	public async updatePropertyByAdmin(input: PropertyUpdate): Promise<Property> {
 		let { propertyStatus, soldAt, deletedAt } = input;
 		const search: T = {
 			_id: input._id,
@@ -246,7 +246,7 @@ export class PropertyService {
 		return result;
 	}
 
-	public async removePropertybyAdmin(propertyId: ObjectId): Promise<Property> {
+	public async removePropertyByAdmin(propertyId: ObjectId): Promise<Property> {
 		const search: T = { _id: propertyId, propertyStatus: PropertyStatus.DELETE };
 		const result = await this.propertyModel.findOneAndDelete(search).exec();
 		if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
