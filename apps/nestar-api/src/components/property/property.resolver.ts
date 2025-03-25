@@ -67,14 +67,15 @@ export class PropertyResolver {
 	}
 
 	@Roles(MemberType.AGENT)
-	@UseGuards(RolesGuard)
-	@Query(() => Properties)
-	public async getAgentProperties(
-		@Args('input') input: AgentPropertiesInquiry,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Properties> {
-		console.log('Query: getAgentProperties');
-
-		return await this.propertyService.getAgentProperties(memberId, input);
-	}
+ 	@UseGuards(RolesGuard)
+ 	@Query(() => Properties)
+ 	public async getAgentProperties(
+ 		@Args('input') input: AgentPropertiesInquiry,
+ 		@AuthMember('_id') memberId: ObjectId,
+ 	): Promise<Properties> {
+ 		console.log('Query: getAgentProperties');
+ 
+ 		return await this.propertyService.getAgentProperties(memberId, input);
+ 	}
+	
 }

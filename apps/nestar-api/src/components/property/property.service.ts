@@ -196,4 +196,5 @@ export class PropertyService {
 
 		return result[0];
 	}
+	
 }
