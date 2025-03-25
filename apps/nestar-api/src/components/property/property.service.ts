@@ -11,6 +11,7 @@ import { ViewInput } from '../../libs/dto/view/view.input';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { StatisticModifier, T } from '../../libs/types/common';
+import { PropertyUpdate } from '../../libs/dto/property/property.update';
 
 @Injectable()
 export class PropertyService {
@@ -63,4 +64,30 @@ export class PropertyService {
 			.findByIdAndUpdate({ _id }, { $inc: { [targetKey]: modifier } }, { new: true })
 			.exec()) as unknown as Property;
 	}
+	public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
+	
+		// moment  considered legacy. Use other alternatives
+		let { propertyStatus, soldAt, deletedAt } = input;
+		
+		
+		const search: T = {
+			_id: input._id,
+			memberId: memberId,
+			propertyStatus: PropertyStatus.ACTIVE,
+		};
+
+		
+		
+		if (propertyStatus === PropertyStatus.SOLD) soldAt = new Date();
+		else if (propertyStatus === PropertyStatus.DELETE) deletedAt = new Date();
+
+		const result = await this.propertyModel.findOneAndUpdate(search, input, { new: true }).exec();
+		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+		if (soldAt || deletedAt) {
+			await this.memberService.memberStatsEditor({ _id: memberId, targetKey: 'memberProperties', modifier: -1 });
+		}
+
+		return result;
+	
 }
