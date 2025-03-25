@@ -199,7 +199,7 @@ export class PropertyService {
 	}
 
 	/** ADMIN */
-	public async getAllPropertiesbyAdmin(input: AllPropertiesInquiry): Promise<Properties> {
+	public async getAllPropertiesByAdmin(input: AllPropertiesInquiry): Promise<Properties> {
 		const { page, limit, sort, direction, search } = input;
 		const { propertyStatus, propertyLocationList } = search;
 
