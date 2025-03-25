@@ -10,7 +10,7 @@ async function bootstrap() {
 	app.useGlobalInterceptors(new LoggingInterceptor()); //Mw sifatida integration
 	app.enableCors({ origin: true, credentials: true });
 
-	app.use(graphqlUploadExpress({ maxFileSize: 15000000000, maxFiles: 10 }));
+	app.use(graphqlUploadExpress({ maxFileSize: 15 * 1000 * 10, maxFiles: 10 }));
 	app.use('/uploads', express.static('./uploads'));
 	await app.listen(process.env.PORT_API ?? 3000);
 }

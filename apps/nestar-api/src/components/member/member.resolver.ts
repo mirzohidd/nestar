@@ -38,8 +38,8 @@ export class MemberResolver {
 		console.log(memberNick);
 		return `hi ${memberNick}`;
 	}
-	@Roles(MemberType.USER)
-	@UseGuards(RolesGuard)
+	
+	@UseGuards(AuthGuard)
 	@Query(() => String)
 	public async checkAuthRoles(@AuthMember() authMember: Member): Promise<string> {
 		console.log('Query сheckAuth');
