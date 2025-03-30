@@ -16,6 +16,8 @@ export const availablePropertySorts = [
 	'propertyPrice',
 ];
 
+export const availableBoardArticleSorts = ['createdAt', 'updatedAt', 'articleLikes', 'articleViews'];
+
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
 export const getSerialForImage = (filename: string) => {
 	const ext = path.parse(filename).ext;
