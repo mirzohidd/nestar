@@ -44,15 +44,15 @@ export class BoardArticleService {
 		const targetBoardArticle: BoardArticle | null = await this.boardArticleModel.findOne(search).lean().exec();
 		if (!targetBoardArticle) throw new BadRequestException(Message.NO_DATA_FOUND);
 
-		if (memberId) {
-			const viewInput: ViewInput = { memberId: memberId, viewRefId: articleId, viewGroup: ViewGroup.ARTICLE };
-			const newView = await this.viewService.recordView(viewInput);
+			if (memberId) {
+				const viewInput: ViewInput = { memberId: memberId, viewRefId: articleId, viewGroup: ViewGroup.ARTICLE };
+				const newView = await this.viewService.recordView(viewInput);
 
-			if (newView) {
-				await this.boardArticleStatsEditor({ _id: articleId, targetKey: 'articleViews', modifier: 1 });
-				targetBoardArticle.articleViews += 1;
+				if (newView) {
+					await this.boardArticleStatsEditor({ _id: articleId, targetKey: 'articleViews', modifier: 1 });
+					targetBoardArticle.articleViews += 1;
+				}
 			}
-		}
 
 		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId);
 		return targetBoardArticle;
