@@ -2,7 +2,11 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectModel } from '@nestjs/mongoose';
 import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-article';
 import { Model, ObjectId } from 'mongoose';
-import { AllBoardArticlesInquiry, BoardArticleInput, BoardArticlesInquiry } from '../../libs/dto/board-article/board-article.input';
+import {
+	AllBoardArticlesInquiry,
+	BoardArticleInput,
+	BoardArticlesInquiry,
+} from '../../libs/dto/board-article/board-article.input';
 import { MemberService } from '../member/member.service';
 import { ViewService } from '../view/view.service';
 import { Direction, Message } from '../../libs/enums/common.enum';
@@ -12,13 +16,17 @@ import { ViewGroup } from '../../libs/enums/view.enum';
 import { ViewInput } from '../../libs/dto/view/view.input';
 import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update';
 import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
+import { LikeService } from '../like/like.service';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
 
 @Injectable()
 export class BoardArticleService {
 	constructor(
 		@InjectModel('BoardArticle') private readonly boardArticleModel: Model<BoardArticle>,
-		private readonly memberService: MemberService,
-		private readonly viewService: ViewService,
+		private  memberService: MemberService,
+		private  viewService: ViewService,
+		private  likeService: LikeService,
 	) {}
 
 	public async createBoardArticle(memberId: ObjectId, input: BoardArticleInput): Promise<BoardArticle> {
@@ -44,15 +52,15 @@ export class BoardArticleService {
 		const targetBoardArticle: BoardArticle | null = await this.boardArticleModel.findOne(search).lean().exec();
 		if (!targetBoardArticle) throw new BadRequestException(Message.NO_DATA_FOUND);
 
-			if (memberId) {
-				const viewInput: ViewInput = { memberId: memberId, viewRefId: articleId, viewGroup: ViewGroup.ARTICLE };
-				const newView = await this.viewService.recordView(viewInput);
+		if (memberId) {
+			const viewInput: ViewInput = { memberId: memberId, viewRefId: articleId, viewGroup: ViewGroup.ARTICLE };
+			const newView = await this.viewService.recordView(viewInput);
 
-				if (newView) {
-					await this.boardArticleStatsEditor({ _id: articleId, targetKey: 'articleViews', modifier: 1 });
-					targetBoardArticle.articleViews += 1;
-				}
+			if (newView) {
+				await this.boardArticleStatsEditor({ _id: articleId, targetKey: 'articleViews', modifier: 1 });
+				targetBoardArticle.articleViews += 1;
 			}
+		}
 
 		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId);
 		return targetBoardArticle;
@@ -115,7 +123,29 @@ export class BoardArticleService {
 		return result[0];
 	}
 
-    /** ADMIN **/
+	public async likeTargetArticle(memberId: ObjectId, likeRefId: ObjectId): Promise<BoardArticle> {
+		const target: BoardArticle | null = await this.boardArticleModel
+			.findOne({ _id: likeRefId, articleStatus: BoardArticleStatus.ACTIVE })
+			.exec();
+
+		if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		const input: LikeInput = {
+			memberId: memberId,
+			likeRefId: likeRefId,
+			likeGroup: LikeGroup.ARTICLE,
+		};
+		console.log(input);
+
+		const modifier: number = await this.likeService.toggleLike(input);
+
+		const result = await this.boardArticleStatsEditor({ _id: likeRefId, targetKey: 'articleLikes', modifier: modifier });
+
+		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+
+		return result;
+	}
+
+	/** ADMIN **/
 	public async getAllBoardArticlesByAdmin(input: AllBoardArticlesInquiry): Promise<BoardArticles> {
 		const { articleStatus, articleCategory } = input.search;
 		const match: T = {};
@@ -173,8 +203,7 @@ export class BoardArticleService {
 		return result;
 	}
 
-
-    // ====
+	// ====
 	public async boardArticleStatsEditor(input: StatisticModifier): Promise<BoardArticle> {
 		const { _id, targetKey, modifier } = input;
 		return (await this.boardArticleModel
