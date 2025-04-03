@@ -1,3 +1,4 @@
+import { MeFollowed } from './../../libs/dto/follow/follow';
 import { LikeService } from './../like/like.service';
 import { ViewInput } from './../../libs/dto/view/view.input';
 import { ViewService } from './../view/view.service';
@@ -15,12 +16,15 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
-import { MeLiked } from '../../libs/dto/like/like';
+
+import { Follower, Following } from '../../libs/dto/follow/follow';
 
 @Injectable()
 export class MemberService {
 	constructor(
 		@InjectModel('Member') private readonly memberModel: Model<Member>,
+		@InjectModel('Follow') private readonly followModel: Model<Follower | Following>,
+
 		private authService: AuthService,
 		private viewService: ViewService,
 		private likeService: LikeService,
@@ -69,8 +73,6 @@ export class MemberService {
 	}
 
 	public async getMember(memberId: ObjectId | null, targetId: ObjectId): Promise<Member> {
-		
-		
 		const search: T = {
 			_id: targetId,
 			memberStatus: {
@@ -79,11 +81,11 @@ export class MemberService {
 		};
 
 		const targetMember: Member | null = await this.memberModel.findOne(search).lean().exec();
-		
+
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		if (memberId) {
-			console.log('2222')
+			console.log('2222');
 			const viewInput = {
 				viewGroup: ViewGroup.MEMBER,
 				viewRefId: targetId,
@@ -94,14 +96,20 @@ export class MemberService {
 				await this.memberModel.findOneAndUpdate(search, { $inc: { memberViews: 1 } }).exec();
 				targetMember.memberViews++;
 			}
-			
+
 			const likeInput: LikeInput = { memberId: memberId, likeRefId: targetId, likeGroup: LikeGroup.MEMBER };
 			targetMember.meLiked = await this.likeService.checkLikeExistence(likeInput);
+
+			targetMember.meFollowed = await this.checkSubscription(memberId, targetId);
 		}
 
-		
-
 		return targetMember;
+	}
+
+	private async checkSubscription(followerId: ObjectId, followingId: ObjectId): Promise<MeFollowed[]> {
+		const result = await this.followModel.findOne({ followingId: followingId, followerId: followerId }).exec();
+
+		return result ? [{ followerId: followerId, followingId: followingId, myFollowing: true }] : [];
 	}
 
 	public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
@@ -109,8 +117,6 @@ export class MemberService {
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
-	
-		
 
 		const result = await this.memberModel
 			.aggregate([
@@ -125,7 +131,6 @@ export class MemberService {
 			])
 			.exec();
 
-		
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		return result[0];
 	}
@@ -141,7 +146,6 @@ export class MemberService {
 			likeRefId: likeRefId,
 			likeGroup: LikeGroup.MEMBER,
 		};
-		
 
 		// LIKE TOGGLE via Like modules
 		const modifier: number = await this.likeService.toggleLike(input);
@@ -162,7 +166,6 @@ export class MemberService {
 		if (memberType) match.memberType = memberType;
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
 
-	
 		const result = await this.memberModel
 			.aggregate([
 				{ $match: match },
@@ -176,7 +179,6 @@ export class MemberService {
 			])
 			.exec();
 
-	
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		return result[0];
 	}
@@ -187,6 +189,8 @@ export class MemberService {
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 		return result;
 	}
+
+	
 	public async memberStatsEditor(input: StatisticModifier): Promise<Member> {
 		const { _id, targetKey, modifier } = input;
 

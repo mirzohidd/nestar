@@ -25,4 +25,3 @@ import { MemberModule } from '../member/member.module';
 	exports: [FollowService, FollowResolver],
 })
 export class FollowModule {}
-
