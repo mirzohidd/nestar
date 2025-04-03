@@ -8,8 +8,7 @@ import { AppResolver } from './app.resolver';
 import { ComponentsModule } from './components/components.module';
 import { DatabaseModule } from './database/database.module';
 import { T } from './libs/types/common';
-import { FollowResolver } from './componenets/follow/follow.resolver';
-import { FollowService } from './componenets/follow/follow.service';
+
 @Module({
 	imports: [
 		ConfigModule.forRoot(),
@@ -32,6 +31,6 @@ import { FollowService } from './componenets/follow/follow.service';
 		DatabaseModule,//TCP
 	],
 	controllers: [AppController],
-	providers: [AppService, AppResolver, FollowResolver, FollowService],
+	providers: [AppService, AppResolver]
 })
 export class AppModule {}
