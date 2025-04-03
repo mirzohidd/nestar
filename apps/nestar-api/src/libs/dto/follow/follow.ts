@@ -41,7 +41,7 @@ export class Follower {
 	meFollowed?: MeFollowed[];
 
 	@Field(() => Member, { nullable: true })
-	followerData?: Member;
+	followingData?: Member;
 }
 
 @ObjectType()
