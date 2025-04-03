@@ -15,6 +15,7 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { MeLiked } from '../../libs/dto/like/like';
 
 @Injectable()
 export class MemberService {
@@ -66,29 +67,40 @@ export class MemberService {
 		result.accessToken = await this.authService.createToken(result);
 		return result;
 	}
+
 	public async getMember(memberId: ObjectId | null, targetId: ObjectId): Promise<Member> {
+		
+		
 		const search: T = {
 			_id: targetId,
 			memberStatus: {
 				$in: [MemberStatus.ACTIVE, MemberStatus.BLOCK],
 			},
 		};
-		const targetMember = await this.memberModel.findOne(search).lean().exec();
+
+		const targetMember: Member | null = await this.memberModel.findOne(search).lean().exec();
+		
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
 		if (memberId) {
-			const viewInput: ViewInput = {
-				memberId: memberId,
-				viewRefId: targetId,
+			console.log('2222')
+			const viewInput = {
 				viewGroup: ViewGroup.MEMBER,
+				viewRefId: targetId,
+				memberId: memberId,
 			};
 			const newView = await this.viewService.recordView(viewInput);
 			if (newView) {
-				await this.memberModel.findOneAndUpdate(search, { $inc: { memberViews: 1 } }, { new: true }).exec();
+				await this.memberModel.findOneAndUpdate(search, { $inc: { memberViews: 1 } }).exec();
 				targetMember.memberViews++;
 			}
-			// meLiked
-			// meFollowed
+			
+			const likeInput: LikeInput = { memberId: memberId, likeRefId: targetId, likeGroup: LikeGroup.MEMBER };
+			targetMember.meLiked = await this.likeService.checkLikeExistence(likeInput);
 		}
+
+		
+
 		return targetMember;
 	}
 
@@ -97,7 +109,8 @@ export class MemberService {
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
-		console.log('match:', match);
+	
+		
 
 		const result = await this.memberModel
 			.aggregate([
@@ -112,7 +125,7 @@ export class MemberService {
 			])
 			.exec();
 
-		console.log('result:', result);
+		
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		return result[0];
 	}
@@ -128,7 +141,7 @@ export class MemberService {
 			likeRefId: likeRefId,
 			likeGroup: LikeGroup.MEMBER,
 		};
-		console.log(input)
+		
 
 		// LIKE TOGGLE via Like modules
 		const modifier: number = await this.likeService.toggleLike(input);
@@ -149,8 +162,7 @@ export class MemberService {
 		if (memberType) match.memberType = memberType;
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
 
-		console.log('match:', match);
-
+	
 		const result = await this.memberModel
 			.aggregate([
 				{ $match: match },
@@ -164,7 +176,7 @@ export class MemberService {
 			])
 			.exec();
 
-		console.log('result:', result);
+	
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		return result[0];
 	}

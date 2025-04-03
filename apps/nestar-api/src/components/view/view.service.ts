@@ -10,6 +10,7 @@ export class ViewService {
 	constructor(@InjectModel('View') private readonly viewModel: Model<View>) {}
 
 	public async recordView(input: ViewInput): Promise<View | null> {
+		console.log("1")
 		const viewExist = await this.checkViewExistence(input);
 		if (!viewExist) {
 			console.log('-New View Insert  -');
@@ -18,6 +19,7 @@ export class ViewService {
 	}
 
 	private async checkViewExistence(input: ViewInput): Promise<View | null> {
+		console.log("2")
 		const { memberId, viewRefId } = input;
 
 		const search: T = { memberId: memberId, viewRefId: viewRefId };
