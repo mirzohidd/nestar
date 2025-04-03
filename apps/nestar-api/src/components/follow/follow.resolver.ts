@@ -28,7 +28,7 @@ export class FollowResolver {
 	}
 
 	@UseGuards(WithoutGuard)
-    @Query(() => Followers)
+    @Query(() => Followings)
 	public async getMemberFollowings(
 		@Args('input') input: FollowInquiry,
 		@AuthMember('_id') memberId: ObjectId | null,
