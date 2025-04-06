@@ -6,7 +6,7 @@ import { MemberService } from '../member/member.service';
 import { FollowInquiry } from '../../libs/dto/follow/follow.input';
 import { Message, Direction } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
-import { lookupFollowingData, lookupFollowerData } from '../../libs/config';
+import { lookupFollowingData, lookupFollowerData, lookupAuthMemberLiked } from '../../libs/config';
 
 @Injectable()
 export class FollowService {
@@ -66,9 +66,9 @@ export class FollowService {
 				{
 					$facet: {
 						list: [
-
 							{ $skip: (page - 1) * limit },
 							{ $limit: limit },
+							lookupAuthMemberLiked(memberId, '$followingId'), // meLiked
 							lookupFollowingData,
 							{ $unwind: '$followingData' },
 						],
@@ -79,9 +79,9 @@ export class FollowService {
 			.exec();
 		if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-        /** [
+		/** [
                 { list: [ [Object], [Object], [Object] ], metaCounter: [ [Object] ] }
-            ]**/ 
+            ]**/
 		return result[0];
 	}
 
@@ -101,7 +101,8 @@ export class FollowService {
 						list: [
 							{ $skip: (page - 1) * limit },
 							{ $limit: limit },
-							// meLiked
+							lookupAuthMemberLiked(memberId, '$followerId'), // meLiked
+
 							// meFollowed
 							lookupFollowerData,
 							{ $unwind: '$followerData' },

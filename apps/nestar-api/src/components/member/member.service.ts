@@ -18,6 +18,7 @@ import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 
 import { Follower, Following } from '../../libs/dto/follow/follow';
+import { lookupAuthMemberLiked } from '../../libs/config';
 
 @Injectable()
 export class MemberService {
@@ -62,7 +63,7 @@ export class MemberService {
 		response.accessToken = await this.authService.createToken(response);
 		return response;
 	}
-	public async updateMember(memberId: ObjectId, input: MemberUpdate): Promise<Member> {
+	public async updateMember(memberId: ObjectId | null, input: MemberUpdate): Promise<Member> {
 		const result: Member | null = await this.memberModel
 			.findOneAndUpdate({ _id: memberId }, input, { new: true })
 			.exec();
@@ -112,7 +113,7 @@ export class MemberService {
 		return result ? [{ followerId: followerId, followingId: followingId, myFollowing: true }] : [];
 	}
 
-	public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
+	public async getAgents(memberId: ObjectId | null, input: AgentsInquiry): Promise<Members> {
 		const { text } = input.search;
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
@@ -124,7 +125,7 @@ export class MemberService {
 				{ $sort: sort },
 				{
 					$facet: {
-						list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit }],
+						list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit },lookupAuthMemberLiked(memberId,'$_id')],
 						metaCounter: [{ $count: 'total' }],
 					},
 				},
@@ -135,7 +136,7 @@ export class MemberService {
 		return result[0];
 	}
 
-	public async likeTargetMember(memberId: ObjectId, likeRefId: ObjectId): Promise<Member> {
+	public async likeTargetMember(memberId: ObjectId , likeRefId: ObjectId): Promise<Member> {
 		const target: Member | null = await this.memberModel
 			.findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE })
 			.exec();

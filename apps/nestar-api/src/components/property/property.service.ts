@@ -109,7 +109,7 @@ export class PropertyService {
 		return result;
 	}
 
-	public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promise<Properties> {
+	public async getProperties(memberId: ObjectId | null, input: PropertiesInquiry): Promise<Properties> {
 		const { page, limit, sort, direction, search } = input;
 
 		const match: T = { propertyStatus: PropertyStatus.ACTIVE };
