@@ -6,6 +6,7 @@ import { ViewService } from '../view/view.service';
 import {
 	AgentPropertiesInquiry,
 	AllPropertiesInquiry,
+	OrdinaryInquiry,
 	PISearch,
 	PropertiesInquiry,
 	PropertyInput,
@@ -173,7 +174,11 @@ export class PropertyService {
 			});
 		}
 	}
-
+	
+	public async getFavorites(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
+		return await this.likeService.getFavoriteProperties(memberId, input);
+	}
+	
 	public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquiry): Promise<Properties> {
 		const { page, limit, sort, direction, search } = input;
 
