@@ -85,7 +85,7 @@ export class MemberService {
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		if (memberId) {
-			console.log('2222');
+		
 			const viewInput = {
 				viewGroup: ViewGroup.MEMBER,
 				viewRefId: targetId,

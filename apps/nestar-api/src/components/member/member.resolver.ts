@@ -35,7 +35,6 @@ export class MemberResolver {
 	@Query(() => String)
 	public async checkAuth(@AuthMember('memberNick') memberNick: string): Promise<string> {
 		console.log('Query сheckAuth');
-		console.log(memberNick);
 		return `hi ${memberNick}`;
 	}
 

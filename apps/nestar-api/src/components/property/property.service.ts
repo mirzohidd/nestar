@@ -19,7 +19,7 @@ import { ViewInput } from '../../libs/dto/view/view.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import moment from 'moment';
-import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 
@@ -65,7 +65,7 @@ export class PropertyService {
 			// meLiked
 			const likeInput: LikeInput = { memberId: memberId, likeRefId: propertyId, likeGroup: LikeGroup.PROPERTY };
 			targetProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
-			console.log("meLiked:", targetProperty.meLiked);
+			
 		}
 
 		targetProperty.memberData = await this.memberService.getMember(null, targetProperty.memberId);
@@ -85,9 +85,7 @@ export class PropertyService {
 		// 3. "propertyStatus": "SOLD"?  INTERNAL_SERVER_ERROR: "message": "(0 , moment_1.default) is not a function"
 		// moment  considered legacy. Use other alternatives
 		let { propertyStatus, soldAt, deletedAt } = input;
-		console.log('propertyStatus:', propertyStatus);
-		console.log('soldAt:', soldAt);
-		console.log('deletedAt:', deletedAt);
+	
 
 		const search: T = {
 			_id: input._id,
@@ -129,7 +127,7 @@ export class PropertyService {
 						list: [
 							{ $skip: page - 1 },
 							{ $limit: limit },
-							//meliked
+							lookupAuthMemberLiked(memberId),
 							lookupMember,
 							{ $unwind: '$memberData' },
 						],
@@ -216,7 +214,8 @@ export class PropertyService {
 			likeRefId: likeRefId,
 			likeGroup: LikeGroup.PROPERTY,
 		};
-		console.log(input);
+		
+		
 
 		
 		const modifier: number = await this.likeService.toggleLike(input);

@@ -137,7 +137,8 @@ export class BoardArticleService {
 			likeRefId: likeRefId,
 			likeGroup: LikeGroup.ARTICLE,
 		};
-		console.log(input);
+		
+		
 
 		const modifier: number = await this.likeService.toggleLike(input);
 
