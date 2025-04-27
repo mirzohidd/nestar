@@ -1,5 +1,5 @@
 import { ObjectId } from 'bson';
-export const aviaLableAgentSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews', 'memberRank	'];
+export const aviaLableAgentSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews', 'memberRank'];
 export const aviaLableMemberSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews'];
 
 /**	 IMAGE CONFIGURATION (config.js)	**/
