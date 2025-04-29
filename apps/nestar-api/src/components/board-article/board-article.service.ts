@@ -92,7 +92,7 @@ export class BoardArticleService {
 		return result;
 	}
 
-	public async getBoardArticles(memberId: ObjectId | null , input: BoardArticlesInquiry): Promise<BoardArticles> {
+	public async getBoardArticles(memberId: ObjectId | null, input: BoardArticlesInquiry): Promise<BoardArticles> {
 		const { articleCategory, text } = input.search;
 		const match: T = { articleStatus: BoardArticleStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
@@ -212,7 +212,9 @@ export class BoardArticleService {
 
 	// ====
 	public async boardArticleStatsEditor(input: StatisticModifier): Promise<BoardArticle> {
-		const { _id, targetKey, modifier } = input;
+		const { targetKey, modifier } = input;
+		const _id = shapeIntoMongoObjectId(input._id);
+
 		return (await this.boardArticleModel
 			.findByIdAndUpdate(_id, { $inc: { [targetKey]: modifier } }, { new: true })
 			.exec()) as unknown as BoardArticle;

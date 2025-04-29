@@ -66,7 +66,6 @@ export class PropertyService {
 			// meLiked
 			const likeInput: LikeInput = { memberId: memberId, likeRefId: propertyId, likeGroup: LikeGroup.PROPERTY };
 			targetProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
-			
 		}
 
 		targetProperty.memberData = await this.memberService.getMember(null, targetProperty.memberId);
@@ -74,7 +73,8 @@ export class PropertyService {
 	}
 
 	public async propertyStatsEditor(input: StatisticModifier): Promise<Property> {
-		const { _id, targetKey, modifier } = input;
+		const { targetKey, modifier } = input;
+		const _id = shapeIntoMongoObjectId(input._id);
 		return (await this.propertyModel
 			.findByIdAndUpdate({ _id }, { $inc: { [targetKey]: modifier } }, { new: true })
 			.exec()) as unknown as Property;
@@ -86,7 +86,6 @@ export class PropertyService {
 		// 3. "propertyStatus": "SOLD"?  INTERNAL_SERVER_ERROR: "message": "(0 , moment_1.default) is not a function"
 		// moment  considered legacy. Use other alternatives
 		let { propertyStatus, soldAt, deletedAt } = input;
-	
 
 		const search: T = {
 			_id: input._id,
@@ -174,15 +173,15 @@ export class PropertyService {
 			});
 		}
 	}
-	
+
 	public async getFavorites(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
 		return await this.likeService.getFavoriteProperties(memberId, input);
 	}
-	
+
 	public async getVisited(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
 		return await this.viewService.getVisitedProperties(memberId, input);
 	}
-	
+
 	public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquiry): Promise<Properties> {
 		const { page, limit, sort, direction, search } = input;
 
@@ -223,10 +222,7 @@ export class PropertyService {
 			likeRefId: likeRefId,
 			likeGroup: LikeGroup.PROPERTY,
 		};
-		
-		
 
-		
 		const modifier: number = await this.likeService.toggleLike(input);
 
 		const result = await this.propertyStatsEditor({ _id: likeRefId, targetKey: 'propertyLikes', modifier: modifier });

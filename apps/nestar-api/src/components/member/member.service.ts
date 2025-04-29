@@ -18,7 +18,7 @@ import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 
 import { Follower, Following } from '../../libs/dto/follow/follow';
-import { lookupAuthMemberLiked } from '../../libs/config';
+import { lookupAuthMemberLiked, shapeIntoMongoObjectId } from '../../libs/config';
 
 @Injectable()
 export class MemberService {
@@ -86,7 +86,6 @@ export class MemberService {
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		if (memberId) {
-		
 			const viewInput = {
 				viewGroup: ViewGroup.MEMBER,
 				viewRefId: targetId,
@@ -125,7 +124,11 @@ export class MemberService {
 				{ $sort: sort },
 				{
 					$facet: {
-						list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit },lookupAuthMemberLiked(memberId,'$_id')],
+						list: [
+							{ $skip: (input.page - 1) * input.limit },
+							{ $limit: input.limit },
+							lookupAuthMemberLiked(memberId, '$_id'),
+						],
 						metaCounter: [{ $count: 'total' }],
 					},
 				},
@@ -136,7 +139,7 @@ export class MemberService {
 		return result[0];
 	}
 
-	public async likeTargetMember(memberId: ObjectId , likeRefId: ObjectId): Promise<Member> {
+	public async likeTargetMember(memberId: ObjectId, likeRefId: ObjectId): Promise<Member> {
 		const target: Member | null = await this.memberModel
 			.findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE })
 			.exec();
@@ -191,10 +194,9 @@ export class MemberService {
 		return result;
 	}
 
-	
 	public async memberStatsEditor(input: StatisticModifier): Promise<Member> {
-		const { _id, targetKey, modifier } = input;
-
+		const {  targetKey, modifier } = input;
+		const _id = shapeIntoMongoObjectId(input._id);
 		return (await this.memberModel
 			.findOneAndUpdate(_id, { $inc: { [targetKey]: modifier } })
 			.exec()) as unknown as Member;
