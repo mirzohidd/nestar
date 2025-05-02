@@ -6,7 +6,12 @@ import { MemberService } from '../member/member.service';
 import { FollowInquiry } from '../../libs/dto/follow/follow.input';
 import { Message, Direction } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
-import { lookupFollowingData, lookupFollowerData, lookupAuthMemberLiked, lookupAuthMemberFollowed } from '../../libs/config';
+import {
+	lookupFollowingData,
+	lookupFollowerData,
+	lookupAuthMemberLiked,
+	lookupAuthMemberFollowed,
+} from '../../libs/config';
 
 @Injectable()
 export class FollowService {
@@ -43,7 +48,7 @@ export class FollowService {
 		const targetMember = await this.memberService.getMember(null, followingId);
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-		const result = await this.followModel.findOneAndDelete({ followingId: followingId, followerId: followerId });
+		const result = await this.followModel.findOneAndDelete({ followingId: followingId, followerId: followerId }).exec();
 		if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		await this.memberService.memberStatsEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: -1 });
@@ -69,7 +74,7 @@ export class FollowService {
 							{ $skip: (page - 1) * limit },
 							{ $limit: limit },
 							lookupAuthMemberLiked(memberId, '$followingId'), // meLiked
-							lookupAuthMemberFollowed({followerId: memberId, followingId: "$followingId"}), // meFollowed
+							lookupAuthMemberFollowed({ followerId: memberId, followingId: '$followingId' }), // meFollowed
 							lookupFollowingData,
 							{ $unwind: '$followingData' },
 						],
@@ -104,7 +109,7 @@ export class FollowService {
 							{ $limit: limit },
 							lookupAuthMemberLiked(memberId, '$followerId'), // meLiked
 
-							lookupAuthMemberFollowed({followerId: memberId, followingId: "$followerId"}), // meFollowed
+							lookupAuthMemberFollowed({ followerId: memberId, followingId: '$followerId' }), // meFollowed
 							lookupFollowerData,
 							{ $unwind: '$followerData' },
 						],

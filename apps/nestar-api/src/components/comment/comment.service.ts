@@ -64,11 +64,9 @@ export class CommentService {
 
 	public async updateComment(memberId: ObjectId, input: CommentUpdate): Promise<Comment> {
 		const { _id } = input;
-		const result = await this.commentModel.findOneAndUpdate(
-			{ _id: _id, memberId: memberId, commentStatus: CommentStatus.ACTIVE },
-			input,
-			{ new: true },
-		);
+		const result = await this.commentModel
+			.findOneAndUpdate({ _id: _id, memberId: memberId, commentStatus: CommentStatus.ACTIVE }, input, { new: true })
+			.exec();
 		// decrease memberComments if commentStatus is DELETE
 		if (!result) throw new BadRequestException(Message.UPDATE_FAILED);
 		return result;
@@ -102,9 +100,9 @@ export class CommentService {
 		return result[0];
 	}
 
-    /** ADMIN */
+	/** ADMIN */
 	public async removeCommentByAdmin(commentID: ObjectId): Promise<Comment> {
-		const result = await this.commentModel.findByIdAndDelete(commentID);
+		const result = await this.commentModel.findByIdAndDelete(commentID).exec();
 		// decrease userComments
 		if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
 		return result;
